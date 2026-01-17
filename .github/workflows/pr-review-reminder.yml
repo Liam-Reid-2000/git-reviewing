@@ -43,7 +43,6 @@ jobs:
             }
 
             const blocks = [
-              { type: "divider" },
               {
                 type: "context",
                 elements: [
@@ -57,8 +56,10 @@ jobs:
                     text: "*Pending Reviews*"
                   }
                 ]
-              }
+              },
+              { type: "divider" }
             ];
+
 
             for (const pr of relevantPRs) {
               const reviews = await github.paginate(

@@ -1,0 +1,78 @@
+name: PR Review Reminder
+
+on:
+  schedule:
+    - cron: "*/1 * * * *" # Every 5 minutes
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify pending reviewers
+        uses: actions/github-script@v7
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const label = "awaiting review";
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const slackWebhook = process.env.SLACK_WEBHOOK_URL;
+            if (!slackWebhook) {
+              throw new Error("Missing SLACK_WEBHOOK_URL");
+            }
+
+            const prs = await github.paginate(
+              github.rest.pulls.list,
+              { owner, repo, state: "open" }
+            );
+
+            const relevantPRs = prs.filter(pr =>
+              pr.labels.some(l => l.name === label)
+            );
+
+            if (relevantPRs.length === 0) {
+              console.log("No PRs awaiting review");
+              return;
+            }
+
+            let message = `🔔 *PRs Awaiting Review*\n`;
+
+            for (const pr of relevantPRs) {
+              const reviews = await github.paginate(
+                github.rest.pulls.listReviews,
+                { owner, repo, pull_number: pr.number }
+              );
+
+              const reviewedUsers = new Set(
+                reviews.map(r => r.user.login)
+              );
+
+              const pendingReviewers = pr.requested_reviewers
+                .map(r => r.login)
+                .filter(login => !reviewedUsers.has(login));
+
+              if (pendingReviewers.length === 0) continue;
+
+              const mentions = pendingReviewers
+                .map(u => `@${u}`)
+                .join(", ");
+
+              message += `• <${pr.html_url}|#${pr.number} – ${pr.title}>\n`;
+              message += `  Awaiting: ${mentions}\n`;
+            }
+
+            if (message.trim() === "🔔 *PRs Awaiting Review*") {
+              console.log("No pending reviewers");
+              return;
+            }
+
+            await fetch(slackWebhook, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: message })
+            });

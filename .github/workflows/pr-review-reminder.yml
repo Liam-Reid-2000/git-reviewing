@@ -82,17 +82,7 @@ jobs:
                 type: "section",
                 text: {
                   type: "mrkdwn",
-                  text: `*#${pr.number} – ${pr.title}*\n${mentions}`
-                },
-                accessory: {
-                  type: "button",
-                  text: {
-                    type: "plain_text",
-                    emoji: true,
-                    text: "Review"
-                  },
-                  url: pr.html_url,
-                  action_id: `review_pr_${pr.number}`
+                  text: `*<${pr.html_url}|#${pr.number} – ${pr.title}>*\n${mentions}`
                 }
               });
             }

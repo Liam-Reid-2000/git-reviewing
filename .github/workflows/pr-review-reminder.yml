@@ -1,8 +1,14 @@
 name: PR Review Reminder
-
+# Run at 8:30am-4:30pm GMT, Mon-Fri (9:30am-5:30pm during BST)
+# To change in Summer time, need to update manually.
+# Can create an external scheduler if we don't want to manually update.
 on:
   schedule:
+<<<<<<< Updated upstream
     - cron: "*/1 * * * *" # Every 5 minutes
+=======
+    - cron: "30 8-16 * * 1-5" # Hourly 8:30am-4:30pm UTC
+>>>>>>> Stashed changes
   workflow_dispatch:
 
 jobs:

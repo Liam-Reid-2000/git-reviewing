@@ -4,11 +4,7 @@ name: PR Review Reminder
 # Can create an external scheduler if we don't want to manually update.
 on:
   schedule:
-<<<<<<< Updated upstream
-    - cron: "*/1 * * * *" # Every 5 minutes
-=======
     - cron: "30 8-16 * * 1-5" # Hourly 8:30am-4:30pm UTC
->>>>>>> Stashed changes
   workflow_dispatch:
 
 jobs:
@@ -46,7 +42,23 @@ jobs:
               return;
             }
 
-            let message = `🔔 *PRs Awaiting Review*\n`;
+            // Build blocks array
+            const blocks = [
+              {
+                type: "context",
+                elements: [
+                  {
+                    type: "image",
+                    image_url: "https://api.slack.com/img/blocks/bkb_template_images/notificationsWarningIcon.png",
+                    alt_text: "notifications warning icon"
+                  },
+                  {
+                    type: "mrkdwn",
+                    text: "*Pending Reviews*"
+                  }
+                ]
+              }
+            ];
 
             for (const pr of relevantPRs) {
               const reviews = await github.paginate(
@@ -68,11 +80,17 @@ jobs:
                 .map(u => `@${u}`)
                 .join(", ");
 
-              message += `• <${pr.html_url}|#${pr.number} – ${pr.title}>\n`;
-              message += `  Awaiting: ${mentions}\n`;
+              blocks.push({
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: `*<${pr.html_url}|#${pr.number} – ${pr.title}>*\n${mentions}`
+                }
+              });
             }
 
-            if (message.trim() === "🔔 *PRs Awaiting Review*") {
+            // Only header block = no pending reviewers
+            if (blocks.length === 1) {
               console.log("No pending reviewers");
               return;
             }
@@ -80,5 +98,5 @@ jobs:
             await fetch(slackWebhook, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text: message })
+              body: JSON.stringify({ blocks })
             });

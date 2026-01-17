@@ -42,7 +42,6 @@ jobs:
               return;
             }
 
-            // Build blocks array
             const blocks = [
               {
                 type: "context",
@@ -57,8 +56,10 @@ jobs:
                     text: "*Pending Reviews*"
                   }
                 ]
-              }
+              },
+              { type: "divider" }
             ];
+
 
             for (const pr of relevantPRs) {
               const reviews = await github.paginate(
@@ -89,11 +90,13 @@ jobs:
               });
             }
 
-            // Only header block = no pending reviewers
-            if (blocks.length === 1) {
+            // Only header blocks = no pending reviewers
+            if (blocks.length === 2) {
               console.log("No pending reviewers");
               return;
             }
+
+            blocks.push({ type: "divider" });
 
             await fetch(slackWebhook, {
               method: "POST",

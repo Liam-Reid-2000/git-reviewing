@@ -3,8 +3,9 @@ name: PR Review Reminder
 # To change in Summer time, need to update manually.
 # Can create an external scheduler if we don't want to manually update.
 on:
-  schedule:
-    - cron: "30 8-16 * * 1-5" # Hourly 8:30am-4:30pm UTC
+  # Uncomment below lines for schedule
+  # schedule: 
+  #   - cron: "30 8-16 * * 1-5" # Hourly 8:30am-4:30pm UTC
   workflow_dispatch:
 
 jobs:
